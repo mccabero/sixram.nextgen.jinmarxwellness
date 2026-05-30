@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sixram.Nextgen.JinmarxWellness.Api/Sixram.Nextgen.JinmarxWellness.Api.csproj" />
+    <Project Path="src/Sixram.Nextgen.JinmarxWellness.Application/Sixram.Nextgen.JinmarxWellness.Application.csproj" />
+    <Project Path="src/Sixram.Nextgen.JinmarxWellness.Domain/Sixram.Nextgen.JinmarxWellness.Domain.csproj" />
+    <Project Path="src/Sixram.Nextgen.JinmarxWellness.Infrastructure/Sixram.Nextgen.JinmarxWellness.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sixram.Nextgen.JinmarxWellness.Tests/Sixram.Nextgen.JinmarxWellness.Tests.csproj" />
+  </Folder>
+</Solution>
