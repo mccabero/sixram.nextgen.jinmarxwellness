@@ -1,2 +1,2 @@
 # sixram.nextgen.sixramwellness
-Sixram Technologies - Sixram Wellness and Beauty Center
+Sixram Technologies - Jinmarx Wellness and Beauty Center
