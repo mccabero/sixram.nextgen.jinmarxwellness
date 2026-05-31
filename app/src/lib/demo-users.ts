@@ -63,6 +63,8 @@ export function getSeedAdminUser(): CurrentUser {
       { code: "administration.view", name: "View administration menu" },
       { code: "company_information.view", name: "View company information" },
       { code: "company_information.update", name: "Manage company information" },
+      { code: "camera_events.view", name: "View camera events" },
+      { code: "camera_events.manage", name: "Manage camera events" },
       { code: "users.view", name: "View user information" },
       { code: "users.update", name: "Manage user information" },
       { code: "rbac.view", name: "View RBAC" },

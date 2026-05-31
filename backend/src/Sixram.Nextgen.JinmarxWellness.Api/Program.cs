@@ -1,10 +1,13 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 using Sixram.Nextgen.JinmarxWellness.Api.Middleware;
+using Sixram.Nextgen.JinmarxWellness.Api.Realtime;
 using Sixram.Nextgen.JinmarxWellness.Application.Auth.Validators;
+using Sixram.Nextgen.JinmarxWellness.Application.CameraEvents.Interfaces;
 using Sixram.Nextgen.JinmarxWellness.Application.Common.Models;
 using Sixram.Nextgen.JinmarxWellness.Infrastructure;
 
@@ -37,6 +40,13 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+builder.Services.AddScoped<ICameraEventNotifier, SignalRCameraEventNotifier>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalFrontend", policy =>
@@ -85,6 +95,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<CameraEventHub>("/hubs/camera-events");
 
 if (builder.Configuration.GetValue<bool>("DatabaseStartup:ApplyMigrationsOnStartup"))
 {

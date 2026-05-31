@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, Applicati
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<ServiceOffering> ServiceOfferings => Set<ServiceOffering>();
+    public DbSet<CameraEvent> CameraEvents => Set<CameraEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

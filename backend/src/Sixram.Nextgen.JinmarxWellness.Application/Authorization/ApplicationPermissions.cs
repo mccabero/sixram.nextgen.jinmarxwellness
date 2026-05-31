@@ -67,6 +67,12 @@ public static class ApplicationPermissions
         public const string Update = "company_information.update";
     }
 
+    public static class CameraEvents
+    {
+        public const string View = "camera_events.view";
+        public const string Manage = "camera_events.manage";
+    }
+
     public static class Users
     {
         public const string View = "users.view";
@@ -102,6 +108,8 @@ public static class ApplicationPermissions
         new(Administration.View, "View Administration Menu", "Allows the user to see administration menu items.", "Administration"),
         new(CompanyInformation.View, "View Company Information", "Allows the user to view company information.", "Administration"),
         new(CompanyInformation.Update, "Update Company Information", "Allows the user to update company information.", "Administration"),
+        new(CameraEvents.View, "View Camera Events", "Allows the user to view camera event captures.", "Administration"),
+        new(CameraEvents.Manage, "Manage Camera Events", "Allows the user to clear camera events and update camera settings.", "Administration"),
         new(Users.View, "View User Information", "Allows the user to view user information.", "Administration"),
         new(Users.Update, "Update User Information", "Allows the user to update user information.", "Administration"),
         new(Rbac.View, "View RBAC", "Allows the user to view roles and permissions.", "Administration"),

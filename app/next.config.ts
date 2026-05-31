@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         source: "/openapi/:path*",
         destination: `${apiBaseUrl}/openapi/:path*`,
       },
+      {
+        source: "/hubs/:path*",
+        destination: `${apiBaseUrl}/hubs/:path*`,
+      },
     ];
   },
 };

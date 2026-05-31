@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AppFooter } from "@/components/layout/AppFooter";
 import {
   Building2,
+  Camera,
   CalendarDays,
   ChevronDown,
   ClipboardList,
@@ -126,6 +127,12 @@ const navigationItems: NavigationItem[] = [
           "company_information.view",
           "company_information.update",
         ],
+      },
+      {
+        href: "/administration/camera-events",
+        label: "Camera Events",
+        icon: Camera,
+        requiredPermissions: ["camera_events.view", "camera_events.manage"],
       },
       {
         href: "/administration/user-information",

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Sixram.Nextgen.JinmarxWellness.Application.Auth.Interfaces;
+using Sixram.Nextgen.JinmarxWellness.Application.CameraEvents.Interfaces;
 using Sixram.Nextgen.JinmarxWellness.Application.Common.Interfaces;
 using Sixram.Nextgen.JinmarxWellness.Application.Common.Settings;
 using Sixram.Nextgen.JinmarxWellness.Application.CompanyInformation.Interfaces;
@@ -107,6 +108,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyInformationService, CompanyInformationService>();
         services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
         services.AddScoped<IServiceOfferingService, ServiceOfferingService>();
+        services.AddScoped<ICameraEventService, CameraEventService>();
         services.AddScoped<IRbacService, RbacService>();
         services.AddScoped<DatabaseSeeder>();
 
