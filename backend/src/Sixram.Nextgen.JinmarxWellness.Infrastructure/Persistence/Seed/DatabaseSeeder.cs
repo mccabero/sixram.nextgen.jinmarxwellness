@@ -176,22 +176,18 @@ public class DatabaseSeeder
 
     private async Task SeedServiceOfferingsAsync(CancellationToken cancellationToken)
     {
-        if (await _dbContext.ServiceOfferings.AnyAsync(cancellationToken))
-        {
-            return;
-        }
-
         var now = _dateTimeProvider.UtcNow;
         var defaults = new[]
         {
-            ServiceOfferingSeed("Pure Thai Massage", "Premium Package", 600, "Skilled massage techniques to experience.", "+ 1 Hour 550"),
-            ServiceOfferingSeed("Swedish Massage", "Premium Package", 450, "Relax and indulge tired and stressed achy muscles.", "+ free hotstone"),
-            ServiceOfferingSeed("Whole Body Combination", "Premium Package", 550, "A classic massage experience performed with expertise.", "+ free ventosa or hotstone; + 30mins 250"),
-            ServiceOfferingSeed("Foot Reflexology", "Specialized Therapy", 550, "Relieves stress and promotes overall well-being.", "+ Foot Scrub 300"),
+            ServiceOfferingSeed("Pure Thai Massage", "Premium Package", 599, "Skilled massage techniques to experience."),
+            ServiceOfferingSeed("Swedish & Shiatsu Combination", "Premium Package", 399, "Relax and indulge tired and stressed achy muscles.", legacyNames: ["Swedish Massage"]),
+            ServiceOfferingSeed("Whole Body Combination", "Premium Package", 499, "A classic massage experience performed with expertise.", "+ free ventosa or hot stone"),
+            ServiceOfferingSeed("Foot Spa", "Specialized Therapy", 299, "Soothes tired feet and improves circulation."),
+            ServiceOfferingSeed("Foot Reflexology", "Specialized Therapy", 399, "Relieves stress and promotes overall well-being.", "+ foot spa", 249),
             ServiceOfferingSeed("Frozen Shoulder", "Additional Services", null),
             ServiceOfferingSeed("Guasa", "Additional Services", null),
             ServiceOfferingSeed("Slimpack", "Additional Services", null),
-            ServiceOfferingSeed("Scocoa", "Additional Services", null),
+            ServiceOfferingSeed("Sccooa", "Additional Services", null, legacyNames: ["Scocoa"]),
             ServiceOfferingSeed("Luluran", "Additional Services", null),
             ServiceOfferingSeed("Ayurvedic", "Additional Services", null),
             ServiceOfferingSeed("Tapalodo", "Additional Services", null),
@@ -199,42 +195,57 @@ public class DatabaseSeeder
             ServiceOfferingSeed("Padastri", "Additional Services", null),
             ServiceOfferingSeed("Massage", "Additional Services", null),
             ServiceOfferingSeed("Traditional Massage", "Additional Services", null),
-            ServiceOfferingSeed("Relaxation Massage", "Full Body Massage", 400),
-            ServiceOfferingSeed("Athlete Massage", "Full Body Massage", 450),
-            ServiceOfferingSeed("Body Scrub with Wet/dry (Hot Massage)", "Full Body Massage", 850),
-            ServiceOfferingSeed("Jinmarx' Signature Massage with Bone Setting", "Full Body Massage", 1200),
-            ServiceOfferingSeed("Ventosa Therapy", "Full Body Massage", 550),
-            ServiceOfferingSeed("Aromatherapy Massage", "Full Body Massage", 450),
-            ServiceOfferingSeed("Paraffin Wax Massage", "Full Body Massage", 800),
-            ServiceOfferingSeed("Whole Body Massage with Sauna", "Full Body Massage", 850),
-            ServiceOfferingSeed("Whole Body Massage", "Home Services", 800, durationMinutes: 90, isHomeService: true),
-            ServiceOfferingSeed("Whole Body Massage", "Home Services", 1000, durationMinutes: 120, isHomeService: true),
-            ServiceOfferingSeed("Whole Body Massage with Ventosa", "Home Services", 1150, durationMinutes: 120, isHomeService: true)
+            ServiceOfferingSeed("Relaxation Massage", "Full Body Massage", 349),
+            ServiceOfferingSeed("Athlete Massage", "Full Body Massage", 449),
+            ServiceOfferingSeed("Aromatherapy Massage", "Full Body Massage", 399),
+            ServiceOfferingSeed("Ventosa Therapy", "Full Body Massage", 499),
+            ServiceOfferingSeed("Body Scrub with Wet/Dry (Hot Massage)", "Full Body Massage", 699, legacyNames: ["Body Scrub with Wet/dry (Hot Massage)"]),
+            ServiceOfferingSeed("Paraffin Wax Massage", "Full Body Massage", 599),
+            ServiceOfferingSeed("Jinmarx' Signature Massage with Bone Setting", "Full Body Massage", 799),
+            ServiceOfferingSeed("Whole Body Massage", "Home Services", 699, durationMinutes: 90, isHomeService: true),
+            ServiceOfferingSeed("Whole Body Massage", "Home Services", 799, durationMinutes: 120, isHomeService: true),
+            ServiceOfferingSeed("Whole Body Massage with Ventosa or Hot Stone", "Home Services", 899, durationMinutes: 120, isHomeService: true, legacyNames: ["Whole Body Massage with Ventosa"])
         };
 
         var categoryLookup = await _dbContext.ServiceCategories
             .ToDictionaryAsync(x => x.Name, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
-        _dbContext.ServiceOfferings.AddRange(defaults.Select(item =>
+        var existingOfferings = await _dbContext.ServiceOfferings
+            .Include(x => x.ServiceCategory)
+            .ToListAsync(cancellationToken);
+        var serviceOfferingsToAdd = new List<ServiceOffering>();
+        var hasUpdates = false;
+
+        foreach (var item in defaults)
         {
-            var serviceCategory = categoryLookup[item.Category];
-
-            return new ServiceOffering
+            if (!categoryLookup.TryGetValue(item.Category, out var serviceCategory))
             {
-                Name = item.Name,
-                ServiceCategoryId = serviceCategory.Id,
-                Category = serviceCategory.Name,
-                Description = item.Description,
-                DurationMinutes = item.DurationMinutes,
-                Price = item.Price,
-                AddOnDetails = item.AddOnDetails,
-                IsHomeService = item.IsHomeService,
-                IsActive = true,
-                CreatedAt = now
-            };
-        }));
+                throw new InvalidOperationException($"Unable to seed service offering '{item.Name}' because category '{item.Category}' was not found.");
+            }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            var existing = existingOfferings.FirstOrDefault(serviceOffering =>
+                IsSameDefaultServiceOffering(serviceOffering, item));
+
+            if (existing is null)
+            {
+                var newServiceOffering = CreateDefaultServiceOffering(item, serviceCategory, now);
+                serviceOfferingsToAdd.Add(newServiceOffering);
+                existingOfferings.Add(newServiceOffering);
+                continue;
+            }
+
+            hasUpdates |= ApplyDefaultServiceOfferingValues(existing, item, serviceCategory, now);
+        }
+
+        if (serviceOfferingsToAdd.Count > 0)
+        {
+            _dbContext.ServiceOfferings.AddRange(serviceOfferingsToAdd);
+        }
+
+        if (serviceOfferingsToAdd.Count > 0 || hasUpdates)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 
     private static DefaultServiceOffering ServiceOfferingSeed(
@@ -243,9 +254,140 @@ public class DatabaseSeeder
         decimal? price,
         string? description = null,
         string? addOnDetails = null,
+        decimal? addOnRate = null,
         int? durationMinutes = null,
-        bool isHomeService = false) =>
-        new(name, category, price, description, addOnDetails, durationMinutes, isHomeService);
+        bool isHomeService = false,
+        string[]? legacyNames = null) =>
+        new(name, category, price, description, addOnDetails, addOnRate, durationMinutes, isHomeService, legacyNames ?? []);
+
+    private static ServiceOffering CreateDefaultServiceOffering(
+        DefaultServiceOffering item,
+        ServiceCategory serviceCategory,
+        DateTimeOffset now) =>
+        new()
+        {
+            Name = item.Name,
+            ServiceCategoryId = serviceCategory.Id,
+            ServiceCategory = serviceCategory,
+            Category = serviceCategory.Name,
+            Description = item.Description,
+            DurationMinutes = item.DurationMinutes,
+            Price = item.Price,
+            AddOnDetails = item.AddOnDetails,
+            AddOnRate = item.AddOnRate,
+            IsHomeService = item.IsHomeService,
+            IsActive = true,
+            CreatedAt = now
+        };
+
+    private static bool IsSameDefaultServiceOffering(
+        ServiceOffering serviceOffering,
+        DefaultServiceOffering defaultOffering)
+    {
+        var categoryName = serviceOffering.ServiceCategory?.Name ?? serviceOffering.Category;
+
+        return IsDefaultServiceOfferingNameMatch(serviceOffering, defaultOffering)
+            && string.Equals(categoryName, defaultOffering.Category, StringComparison.OrdinalIgnoreCase)
+            && serviceOffering.DurationMinutes == defaultOffering.DurationMinutes
+            && serviceOffering.IsHomeService == defaultOffering.IsHomeService;
+    }
+
+    private static bool ApplyDefaultServiceOfferingValues(
+        ServiceOffering serviceOffering,
+        DefaultServiceOffering defaultOffering,
+        ServiceCategory serviceCategory,
+        DateTimeOffset now)
+    {
+        var hasUpdates = false;
+        var shouldSynchronizeDefaults = IsSystemSeededServiceOffering(serviceOffering);
+
+        if (ShouldSetValue(serviceOffering.Name, defaultOffering.Name, shouldSynchronizeDefaults))
+        {
+            serviceOffering.Name = defaultOffering.Name;
+            hasUpdates = true;
+        }
+
+        if (serviceOffering.ServiceCategoryId != serviceCategory.Id)
+        {
+            serviceOffering.ServiceCategoryId = serviceCategory.Id;
+            serviceOffering.ServiceCategory = serviceCategory;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.Category, serviceCategory.Name, shouldSynchronizeDefaults))
+        {
+            serviceOffering.Category = serviceCategory.Name;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.Description, defaultOffering.Description, shouldSynchronizeDefaults))
+        {
+            serviceOffering.Description = defaultOffering.Description;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.DurationMinutes, defaultOffering.DurationMinutes, shouldSynchronizeDefaults))
+        {
+            serviceOffering.DurationMinutes = defaultOffering.DurationMinutes;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.Price, defaultOffering.Price, shouldSynchronizeDefaults))
+        {
+            serviceOffering.Price = defaultOffering.Price;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.AddOnDetails, defaultOffering.AddOnDetails, shouldSynchronizeDefaults))
+        {
+            serviceOffering.AddOnDetails = defaultOffering.AddOnDetails;
+            hasUpdates = true;
+        }
+
+        if (ShouldSetValue(serviceOffering.AddOnRate, defaultOffering.AddOnRate, shouldSynchronizeDefaults))
+        {
+            serviceOffering.AddOnRate = defaultOffering.AddOnRate;
+            hasUpdates = true;
+        }
+
+        if (hasUpdates)
+        {
+            serviceOffering.LastModifiedAt = now;
+        }
+
+        return hasUpdates;
+    }
+
+    private static bool IsDefaultServiceOfferingNameMatch(
+        ServiceOffering serviceOffering,
+        DefaultServiceOffering defaultOffering) =>
+        string.Equals(serviceOffering.Name, defaultOffering.Name, StringComparison.OrdinalIgnoreCase)
+            || (IsSystemSeededServiceOffering(serviceOffering)
+                && defaultOffering.LegacyNames.Any(legacyName =>
+                    string.Equals(serviceOffering.Name, legacyName, StringComparison.OrdinalIgnoreCase)));
+
+    private static bool IsSystemSeededServiceOffering(ServiceOffering serviceOffering) =>
+        serviceOffering.CreatedByUserId is null && serviceOffering.LastModifiedByUserId is null;
+
+    private static bool ShouldSetValue(string? currentValue, string? defaultValue, bool shouldSynchronizeDefaults)
+    {
+        if (shouldSynchronizeDefaults)
+        {
+            return !string.Equals(currentValue, defaultValue, StringComparison.Ordinal);
+        }
+
+        return string.IsNullOrWhiteSpace(currentValue) && !string.IsNullOrWhiteSpace(defaultValue);
+    }
+
+    private static bool ShouldSetValue(int? currentValue, int? defaultValue, bool shouldSynchronizeDefaults) =>
+        shouldSynchronizeDefaults
+            ? currentValue != defaultValue
+            : currentValue is null && defaultValue.HasValue;
+
+    private static bool ShouldSetValue(decimal? currentValue, decimal? defaultValue, bool shouldSynchronizeDefaults) =>
+        shouldSynchronizeDefaults
+            ? currentValue != defaultValue
+            : currentValue is null && defaultValue.HasValue;
 
     private static void ThrowIfFailed(IdentityResult result, string message)
     {
@@ -264,8 +406,10 @@ public class DatabaseSeeder
         decimal? Price,
         string? Description,
         string? AddOnDetails,
+        decimal? AddOnRate,
         int? DurationMinutes,
-        bool IsHomeService);
+        bool IsHomeService,
+        IReadOnlyCollection<string> LegacyNames);
 
     private sealed record DefaultServiceCategory(
         string Name,

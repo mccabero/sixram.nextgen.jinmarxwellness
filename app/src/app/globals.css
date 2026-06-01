@@ -84,3 +84,82 @@ textarea {
   border-radius: 999px;
   min-height: 3rem;
 }
+
+.appointments-calendar .fc {
+  --fc-border-color: rgba(11, 11, 11, 0.08);
+  --fc-button-bg-color: var(--color-black);
+  --fc-button-border-color: var(--color-black);
+  --fc-button-hover-bg-color: #1b1b1b;
+  --fc-button-hover-border-color: #1b1b1b;
+  --fc-button-active-bg-color: var(--color-gold-deep);
+  --fc-button-active-border-color: var(--color-gold-deep);
+  --fc-today-bg-color: rgba(212, 175, 55, 0.14);
+  color: var(--color-ink);
+  font-family: var(--font-app);
+}
+
+.appointments-calendar .fc-toolbar {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.appointments-calendar .fc-toolbar-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.appointments-calendar .fc-button {
+  border-radius: 0.875rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.65rem;
+  text-transform: capitalize;
+}
+
+.appointments-calendar .fc-daygrid-day {
+  cursor: pointer;
+}
+
+.appointments-calendar .fc-daygrid-day-number,
+.appointments-calendar .fc-col-header-cell-cushion {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.appointments-calendar .fc-event {
+  border: 0;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.125rem 0.25rem;
+}
+
+.appointments-calendar .appointment-calendar-event-scheduled {
+  background: rgba(212, 175, 55, 0.22);
+  color: var(--color-gold-deep);
+}
+
+.appointments-calendar .appointment-calendar-event-completed {
+  background: #dcfce7;
+  color: #047857;
+}
+
+.appointments-calendar .appointment-calendar-event-cancelled {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+@media (min-width: 768px) {
+  .appointments-calendar .fc-toolbar {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .appointments-calendar .fc-toolbar-title {
+    font-size: 1.45rem;
+  }
+}

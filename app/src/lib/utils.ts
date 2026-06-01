@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ApiError } from "@/lib/api";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,6 +16,20 @@ export function formatCurrency(value: number) {
 }
 
 export function getErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    const detail = error.errors
+      .map((item) => item.trim())
+      .find((item) => item.length > 0);
+
+    if (detail && detail !== error.message) {
+      return `${error.message} ${detail}`;
+    }
+
+    if (detail) {
+      return detail;
+    }
+  }
+
   if (error instanceof Error && error.message.trim().length > 0) {
     return error.message;
   }

@@ -593,8 +593,7 @@ public class CameraEventService : ICameraEventService
         var channel = string.IsNullOrWhiteSpace(settings.SnapshotChannel)
             ? DefaultSnapshotChannel
             : settings.SnapshotChannel.Trim();
-        var snapshotUri = new Uri(
-            $"http://{cameraIp}/ISAPI/Streaming/channels/{Uri.EscapeDataString(channel)}/picture");
+        var snapshotUri = BuildSnapshotUri(cameraIp, channel);
 
         using var handler = new HttpClientHandler
         {
@@ -606,15 +605,79 @@ public class CameraEventService : ICameraEventService
             Timeout = TimeSpan.FromSeconds(10)
         };
         using var response = await httpClient.GetAsync(snapshotUri, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw CreateSnapshotStatusException(response, snapshotUri);
+        }
 
         var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
         if (!LooksLikeJpeg(bytes))
         {
-            throw new InvalidOperationException("Camera snapshot response was not a JPEG image.");
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            var responseType = string.IsNullOrWhiteSpace(contentType)
+                ? "a non-JPEG response"
+                : $"a {contentType} response";
+            throw new InvalidOperationException(
+                $"Camera snapshot response was {responseType} instead of a JPEG image. Check the snapshot channel and camera snapshot endpoint.");
         }
 
         return bytes;
+    }
+
+    private static Uri BuildSnapshotUri(string cameraAddress, string channel)
+    {
+        var normalizedAddress = cameraAddress.Trim();
+        if (!normalizedAddress.Contains("://", StringComparison.Ordinal))
+        {
+            normalizedAddress = $"http://{normalizedAddress}";
+        }
+
+        if (!Uri.TryCreate(normalizedAddress, UriKind.Absolute, out var baseUri)
+            || string.IsNullOrWhiteSpace(baseUri.Host))
+        {
+            throw new InvalidOperationException(
+                "Camera address is invalid. Enter an IP or host such as 192.168.254.64, optionally with http://, https://, or a port.");
+        }
+
+        if (!string.Equals(baseUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(baseUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Camera address must use http or https.");
+        }
+
+        return new UriBuilder(baseUri.Scheme, baseUri.Host, baseUri.IsDefaultPort ? -1 : baseUri.Port)
+        {
+            Path = $"ISAPI/Streaming/channels/{Uri.EscapeDataString(channel)}/picture",
+            Query = string.Empty,
+            Fragment = string.Empty
+        }.Uri;
+    }
+
+    private static HttpRequestException CreateSnapshotStatusException(HttpResponseMessage response, Uri snapshotUri)
+    {
+        var statusCode = (int)response.StatusCode;
+        var reason = string.IsNullOrWhiteSpace(response.ReasonPhrase)
+            ? response.StatusCode.ToString()
+            : response.ReasonPhrase;
+        var cameraAddress = snapshotUri.GetLeftPart(UriPartial.Authority);
+        var hint = response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized =>
+                "Check the Hikvision username, password, and whether HTTP snapshot access is enabled.",
+            HttpStatusCode.Forbidden =>
+                "The camera rejected the credentials or the account does not have snapshot permission.",
+            HttpStatusCode.NotFound =>
+                "Check the snapshot channel. For Hikvision, 101 is usually channel 1 main stream and 102 is substream.",
+            HttpStatusCode.RequestTimeout or HttpStatusCode.GatewayTimeout =>
+                "Check that the camera is online and reachable from the server.",
+            _ =>
+                "Check the camera address, port, channel, and credentials."
+        };
+
+        return new HttpRequestException(
+            $"Camera returned HTTP {statusCode} ({reason}) from {cameraAddress}. {hint}",
+            null,
+            response.StatusCode);
     }
 
     private static bool LooksLikeJpeg(byte[] bytes)

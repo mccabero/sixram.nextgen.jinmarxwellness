@@ -76,6 +76,7 @@ public static class ApplicationPermissions
     public static class Users
     {
         public const string View = "users.view";
+        public const string Create = "users.create";
         public const string Update = "users.update";
     }
 
@@ -90,9 +91,9 @@ public static class ApplicationPermissions
         new(Dashboard.View, "View Dashboard", "Allows the user to open the dashboard.", "Dashboard"),
         new(Operations.View, "View Operations Menu", "Allows the user to see operations menu items.", "Operations"),
         new(Appointments.View, "View Appointments", "Allows the user to view appointments.", "Operations"),
-        new(Appointments.Manage, "Manage Appointments", "Allows the user to create and update appointments.", "Operations"),
-        new(PointOfSale.View, "View POS", "Allows the user to open POS checkout.", "Operations"),
-        new(PointOfSale.Manage, "Manage POS", "Allows the user to process checkout transactions.", "Operations"),
+        new(Appointments.Manage, "Manage Appointments", "Allows the user to create, update, and delete appointments.", "Operations"),
+        new(PointOfSale.View, "View Bookings", "Allows the user to view bookings.", "Operations"),
+        new(PointOfSale.Manage, "Manage Bookings", "Allows the user to create, update, and delete bookings.", "Operations"),
         new(Customers.View, "View Customers", "Allows the user to view customers.", "Operations"),
         new(Customers.Manage, "Manage Customers", "Allows the user to create and update customer records.", "Operations"),
         new(Configuration.View, "View Configuration Menu", "Allows the user to see configuration menu items.", "Configuration"),
@@ -111,6 +112,7 @@ public static class ApplicationPermissions
         new(CameraEvents.View, "View Camera Events", "Allows the user to view camera event captures.", "Administration"),
         new(CameraEvents.Manage, "Manage Camera Events", "Allows the user to clear camera events and update camera settings.", "Administration"),
         new(Users.View, "View User Information", "Allows the user to view user information.", "Administration"),
+        new(Users.Create, "Create User Information", "Allows the user to create user accounts.", "Administration"),
         new(Users.Update, "Update User Information", "Allows the user to update user information.", "Administration"),
         new(Rbac.View, "View RBAC", "Allows the user to view roles and permissions.", "Administration"),
         new(Rbac.Manage, "Manage RBAC", "Allows the user to update role permissions.", "Administration")

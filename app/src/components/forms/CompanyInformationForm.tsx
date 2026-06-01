@@ -278,8 +278,8 @@ export function CompanyInformationForm({
               className={cn(
                 "hidden gap-3 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)] md:grid",
                 showBankProvider
-                  ? "md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_120px_72px]"
-                  : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_72px]",
+                  ? "md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_120px_52px]"
+                  : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_52px]",
               )}
             >
               {showBankProvider ? <span>Bank Provider</span> : null}
@@ -295,8 +295,8 @@ export function CompanyInformationForm({
                 className={cn(
                   "grid gap-3 rounded-[22px] border border-black/8 bg-white/70 p-4 md:items-start",
                   showBankProvider
-                    ? "md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_120px_72px]"
-                    : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_72px]",
+                    ? "md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_120px_52px]"
+                    : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_52px]",
                 )}
               >
                 {showBankProvider && type === "bankAccounts" ? (
@@ -344,11 +344,14 @@ export function CompanyInformationForm({
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="h-10 w-10 px-0"
                       disabled={isSubmitting}
+                      aria-label="Remove account"
+                      title="Remove account"
                       onClick={() => removeAccount(type, index)}
                     >
                       <Trash2 className="h-4 w-4" />
-                      Remove
+                      <span className="sr-only">Remove</span>
                     </Button>
                   ) : null}
                 </div>
